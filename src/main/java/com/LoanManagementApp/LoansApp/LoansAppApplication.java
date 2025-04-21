@@ -21,17 +21,16 @@ public class LoansAppApplication {
 				Role superadminRole = new Role();
 				superadminRole.setName("ROLE_SUPER_ADMIN");
 				roleRepository.save(superadminRole);
+			}
 			if (!roleRepository.findByName("ROLE_ADMIN").isPresent()) {
 				Role adminRole = new Role();
 				adminRole.setName("ROLE_ADMIN");
 				roleRepository.save(adminRole);
-
+			}
 			if (!roleRepository.findByName("ROLE_LOAN_OFFICER").isPresent()) {
 				Role officerRole = new Role();
 				officerRole.setName("ROLE_LOAN_OFFICER");
 				roleRepository.save(officerRole);
-			}
-			}
 			}
 		};
 	}
