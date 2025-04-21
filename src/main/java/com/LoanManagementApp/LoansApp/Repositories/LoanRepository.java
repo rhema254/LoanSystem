@@ -14,6 +14,9 @@ import java.util.List;
 public interface LoanRepository extends JpaRepository<Loan, Long> {
     List<Loan> findByCustomerId(Long customerId);
 
+    @Query(value = "SELECT * from Loans WHERE loan_officer_id = :officerId", nativeQuery = true)
+    List<Loan> findByLoanOfficerId(@Param("officerId")Long officerId);
+
     Long countByCustomerId(Long customerId);
 
     @Query("SELECT SUM(l.outstandingBalance) FROM Loan l WHERE l.loanStatus = :status")

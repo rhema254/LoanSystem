@@ -9,12 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
+//    ---------------- Circular Reference in Response! --------------------------
     @PostMapping("/process")
     @PreAuthorize("hasRole('LOAN_OFFICER') or hasRole('ADMIN')")
     public ResponseEntity<Payment> processPayment(@RequestBody PaymentRequestDTO request) {

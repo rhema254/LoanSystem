@@ -101,7 +101,7 @@ public class PaymentService {
                 .findFirstByLoanAndStatusAndPaymentDateBefore(loan, RepaymentScheduleStatus.WAITING, LocalDate.now());
 
         if (overdue.isPresent() && loan.getLoanStatus() == LoanStatus.ACTIVE) {
-            loan.setLoanStatus(LoanStatus.IN_DEFAULT);
+            loan.setLoanStatus(LoanStatus.ACTIVE);
         }
     }
 }
