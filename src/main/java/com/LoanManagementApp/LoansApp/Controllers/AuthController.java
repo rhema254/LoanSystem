@@ -1,7 +1,11 @@
 package com.LoanManagementApp.LoansApp.Controllers;
 
 import com.LoanManagementApp.LoansApp.Models.User;
+import com.LoanManagementApp.LoansApp.Requests.CreateUserRequest;
+import com.LoanManagementApp.LoansApp.Responses.CreateUserResponse;
 import com.LoanManagementApp.LoansApp.Services.AuthService;
+import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,17 +24,12 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<Map<String, Object>> signup(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String password = request.get("password");
-        String email = request.get("email");
-        String role = request.get("role");
-
-        User user = authService.signup(username, password, email, role);
+    public ResponseEntity<Map<String, Object>> signup(@Valid @RequestBody CreateUserRequest createUserRequest) {
+        CreateUserResponse createdUser = authService.signup(createUserRequest);
         return new ResponseEntity<>(
                 Map.of(
                         "message", "User registered successfully",
-                        "user", user
+                        "user", createdUser
                 ),
                 HttpStatus.CREATED
         );
@@ -55,8 +54,6 @@ public class AuthController {
         String email = request.get("email");
         String password = request.get("password");
         String role = request.get("role");
-        Boolean canApproveLoans = request.containsKey("canApproveLoans") ?
-                Boolean.parseBoolean(request.get("canApproveLoans")) : null;
 
         User updatedUser = authService.updateUser(id, username, email, password, role);
         return ResponseEntity.ok(
@@ -68,20 +65,15 @@ public class AuthController {
     }
 
 
-//    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/users/{id}/permissions")
-    public ResponseEntity<User> updateLoanApprovalPermission(
-            @PathVariable Long id, @RequestBody Map<String, Boolean> request) {
-        boolean canApproveLoans = request.getOrDefault("canApproveLoans", false);
-        User updatedUser = authService.updateLoanApprovalPermission(id, canApproveLoans);
-
-        return ResponseEntity.ok(updatedUser);
-    }
-
-
     @GetMapping("/users")
     public List<User> getusers(){
         return authService.getAllUsers();
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id){
+        String deletedUser =  authService.deleteUser(id);
+        return new ResponseEntity<>( deletedUser, HttpStatus.NO_CONTENT);
     }
 
 }

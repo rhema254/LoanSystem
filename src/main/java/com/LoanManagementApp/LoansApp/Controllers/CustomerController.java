@@ -1,8 +1,11 @@
 package com.LoanManagementApp.LoansApp.Controllers;
 
 import com.LoanManagementApp.LoansApp.Models.Customer;
+import com.LoanManagementApp.LoansApp.Requests.CustomerRequestDTO;
+import com.LoanManagementApp.LoansApp.Responses.CustomerResponseDTO;
 import com.LoanManagementApp.LoansApp.Services.CustomerService;
 //import jakarta.validation.Valid;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,12 +14,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/customers")
 public class CustomerController {
 
     @Autowired
@@ -26,49 +31,106 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
-//    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER')")
-    @PostMapping("/customer")
-    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) { // Add @Value
-        Customer created = customerService.createCustomer(customer);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+
+    private CustomerResponseDTO convertToResponseDTO(Customer customer) {
+        CustomerResponseDTO customerDTO = new CustomerResponseDTO();
+        customerDTO.setId(customer.getId());
+        customerDTO.setFirstName(customer.getFirstName());
+        customerDTO.setLastName(customer.getLastName());
+        customerDTO.setEmail(customer.getEmail());
+        customerDTO.setPhone(customer.getPhone());
+        customerDTO.setAddress(customer.getAddress());
+        customerDTO.setIdNumber(customer.getIdNumber());
+        customerDTO.setDob(customer.getDob());
+        customerDTO.setAccountNumber(customer.getAccountNumber());
+        return customerDTO;
     }
 
-//    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER')")
+//-------- Create Customer -----------
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LOAN_OFFICER')")
+    @PostMapping("/")
+    public ResponseEntity<CustomerResponseDTO> createCustomer(@RequestBody CustomerRequestDTO customerRequestDTO) { // Add @Value
+        Customer created = new Customer();
+
+        created.setFirstName(customerRequestDTO.getFirstName());
+        created.setLastName(customerRequestDTO.getLastName());
+        created.setEmail(customerRequestDTO.getEmail());
+        created.setPhone(customerRequestDTO.getPhone());
+        created.setAddress(customerRequestDTO.getAddress());
+        created.setIdNumber(customerRequestDTO.getIdNumber());
+        created.setDob(customerRequestDTO.getDob());
+
+
+        Customer createdCustomer = customerService.createCustomer(created);
+
+        return new ResponseEntity<>(convertToResponseDTO(createdCustomer), HttpStatus.CREATED);
+    }
+
+//------- Get All Customers -----------
+
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     @GetMapping("/customers")
-    public ResponseEntity<List<Customer>> getAllCustomers() {
-        return ResponseEntity.ok(customerService.getAllCustomers());
+    public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
+
+        List<Customer> customers = customerService.getAllCustomers();
+
+        List<CustomerResponseDTO> customerResponseDTOs = customers.stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(customerResponseDTOs);
     }
 
-//    @PreAuthorize("hasRole('ADMIN') or hasRole('OFFICER')")
-    @GetMapping("/customers/{id}")
-    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
-        return customerService.getCustomerById(id)
+//------ Get A User --------
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LOAN_OFFICER')")
+    @GetMapping("/{id}")
+    public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Long id) {
+
+        Optional<Customer> customerOptional = customerService.getCustomerById(id);
+
+        return customerOptional.map(this::convertToResponseDTO)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-//    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/customers/{id}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @RequestBody Customer customer) { // Add @Valid
-        Customer updated = customerService.updateCustomer(id, customer);
-        return ResponseEntity.ok(updated);
+
+// ----- Update A Customer -----
+
+    @PreAuthorize("hasRole('ADMIN') ")
+    @PutMapping("/{id}")
+    public ResponseEntity<CustomerResponseDTO> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequestDTO customerRequestDTO) {
+
+        Customer customer = new Customer();
+        customer.setFirstName(customerRequestDTO.getFirstName());
+        customer.setLastName(customerRequestDTO.getLastName());
+        customer.setEmail(customerRequestDTO.getEmail());
+        customer.setPhone(customerRequestDTO.getPhone());
+        customer.setAddress(customerRequestDTO.getAddress());
+        customer.setIdNumber(customerRequestDTO.getIdNumber());
+
+
+        Customer updatedCustomer = customerService.updateCustomer(id, customer);
+
+        return ResponseEntity.ok(convertToResponseDTO(updatedCustomer));
     }
 
+
+        // ------- Delete Customer -------
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/customers/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+
         try {
             customerService.deleteCustomer(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
-            // Customer not found
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (IllegalStateException e) {
-            // Customer has associated loans
             return ResponseEntity.status(HttpStatus.CONFLICT).body(null);
         }
     }
-
-
-
 }
+
+

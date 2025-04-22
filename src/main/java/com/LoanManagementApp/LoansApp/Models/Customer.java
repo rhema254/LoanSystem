@@ -4,6 +4,7 @@ package com.LoanManagementApp.LoansApp.Models;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,13 @@ public class Customer {
     @Column(nullable = false, unique = true)
     private String idNumber;
 
+    @Column(nullable = false)
+    private LocalDate dob;
+
+    @Column(nullable = false, unique = true)
+    private String accountNumber;
+
     @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
     private List<Loan> loans;
+
 }

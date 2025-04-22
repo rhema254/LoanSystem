@@ -10,6 +10,7 @@ public interface CustomerRepository extends JpaRepository <Customer, Long> {
 
     boolean existsByEmail(String email);
     boolean existsByIdNumber(String idNumber);
+    boolean existsByAccountNumber(String accountNumber);
 
     @Query("SELECT COUNT(DISTINCT c) FROM Customer c JOIN c.loans l GROUP BY c HAVING COUNT(l) > 1")
     Long countCustomersWithMultipleLoans();

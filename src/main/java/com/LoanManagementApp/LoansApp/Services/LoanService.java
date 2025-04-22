@@ -41,9 +41,6 @@ public class LoanService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        if (!user.isCanApproveLoans()) {
-            throw new IllegalArgumentException("User cannot approve loans");
-        }
 
         Long customerId = loanRequestDTO.getCustomerId();
         Long productId = loanRequestDTO.getProductId();

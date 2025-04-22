@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class CustomerService {
@@ -18,11 +19,17 @@ public class CustomerService {
     @Autowired
     private final LoanRepository loanRepository;
 
+    private final Random random = new Random();
+
     public CustomerService(CustomerRepository customerRepository, LoanRepository loanRepository) {
         this.customerRepository = customerRepository;
         this.loanRepository = loanRepository;
     }
 
+    private String generateAccountNumber() {
+        int randomNumber = random.nextInt(1000); // Generates a random number between 0 and 999
+        return String.format("ABC00%03d", randomNumber); // Formats it as "ABC00XXX"
+    }
 
     @Transactional
     public Customer createCustomer(Customer customer) {
@@ -32,6 +39,13 @@ public class CustomerService {
         if (customerRepository.existsByIdNumber(customer.getIdNumber())) {
             throw new IllegalArgumentException("ID number already exists");
         }
+        String accountNumber;
+        do {
+            accountNumber = generateAccountNumber();
+        } while (customerRepository.existsByAccountNumber(accountNumber)); // Ensure uniqueness
+
+        customer.setAccountNumber(accountNumber);
+
         return customerRepository.save(customer);
     }
 
@@ -54,6 +68,9 @@ public class CustomerService {
                     if (!existing.getIdNumber().equals(updatedCustomer.getIdNumber()) &&
                             customerRepository.existsByIdNumber(updatedCustomer.getIdNumber())) {
                         throw new IllegalArgumentException("ID number already exists");
+                    }
+                    if (updatedCustomer.getDob() != null){
+                        throw new IllegalArgumentException("Unauthorised Action. Kindly visit your nearest Bank to update it.");
                     }
                     existing.setFirstName(updatedCustomer.getFirstName());
                     existing.setLastName(updatedCustomer.getLastName());

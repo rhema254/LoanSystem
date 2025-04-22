@@ -9,8 +9,6 @@ import org.springframework.stereotype.Component;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class JwtGenerator {
@@ -21,17 +19,14 @@ public class JwtGenerator {
     private long jwtExpiration;
 
     public String generateToken(User user) {
-        List<String> roles = user.getRoles().stream()
-                .map(role -> role.getName())
-                .collect(Collectors.toList());
+        String role = user.getRole().name();
 
         byte[] keyBytes = Base64.getDecoder().decode(jwtSecret);
         SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "HmacSHA512");
 
         return Jwts.builder()
                 .setSubject(user.getUsername())
-                .claim("roles", roles)
-                .claim("canApproveLoans", user.isCanApproveLoans())
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(secretKey, SignatureAlgorithm.HS512)
